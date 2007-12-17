@@ -16,7 +16,6 @@ URL:		http://www.fast-info.de/vdr/playlist/
 Source:		http://www.fast-info.de/vdr/playlist/vdr-%plugin-%version%prever.tar.bz2
 Patch0:		91_playlist-0.0.2-compile-fix.dpatch
 Patch1:		92_playlist-0.0.2-buffer.dpatch
-BuildRoot:	%{_tmppath}/%{name}-buildroot
 BuildRequires:	vdr-devel >= 1.4.1-6
 Requires:	vdr-abi = %vdr_abi
 
