@@ -3,7 +3,7 @@
 %define name	vdr-plugin-%plugin
 %define version	0.0.2
 %define prever	rc3
-%define rel	12
+%define rel	13
 %define release	0.%prever.%rel
 
 Summary:	VDR plugin: playlist for recordings
@@ -12,12 +12,13 @@ Version:	%version
 Release:	%mkrel %release
 Group:		Video
 License:	GPL
-URL:		http://www.fast-info.de/vdr/playlist/
+URL:		http://www.linuxtv.org/vdrwiki/index.php/Playlist-plugin
 Source:		http://www.fast-info.de/vdr/playlist/vdr-%plugin-%version%prever.tar.bz2
-Patch0:		91_playlist-0.0.2-compile-fix.dpatch
-Patch1:		92_playlist-0.0.2-buffer.dpatch
+Patch0:		91_playlist-0.0.2rc3-fix-1.3.25.dpatch
+Patch1:		93_playlist-0.0.2-1.5.7.dpatch
+Patch2:		playlist-0.0.2-i18n-1.6.patch
 BuildRoot:	%{_tmppath}/%{name}-buildroot
-BuildRequires:	vdr-devel >= 1.4.1-6
+BuildRequires:	vdr-devel >= 1.6.0
 Requires:	vdr-abi = %vdr_abi
 
 %description
@@ -25,8 +26,10 @@ This is a plugin for VDR to allow having recording playlists.
 
 %prep
 %setup -q -n %plugin-%version
-%patch0 -p1 -b .fix
-%patch1 -p1 -b .buffer
+%patch0 -p1
+%patch1 -p1
+%patch2 -p1
+%vdr_plugin_prep
 
 %vdr_plugin_params_begin %plugin
 # show the plugin in the main menu
