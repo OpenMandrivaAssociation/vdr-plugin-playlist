@@ -3,7 +3,7 @@
 %define name	vdr-plugin-%plugin
 %define version	0.0.2
 %define prever	rc3
-%define rel	14
+%define rel	15
 %define release	0.%prever.%rel
 
 Summary:	VDR plugin: playlist for recordings
