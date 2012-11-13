@@ -1,0 +1,3006 @@
+
+This is a semi-automatically created i18n adaptation patch and may contain
+errors (such as missing translations). This should only be used as a
+temporary measure until the upstream plugin maintainer fixes the plugin
+properly according to the instructions in i18n-to-gettext.pl.
+
+Created for Mandriva Linux packaging by Anssi Hannula <anssi@mandriva.org>.
+
+
+Index: playlist-0.0.2/Makefile
+===================================================================
+--- playlist-0.0.2/Makefile
++++ playlist-0.0.2/Makefile	2008-04-24 22:20:07.000000000 +0300
+@@ -70,7 +70,7 @@
+ 
+ ### The object files (add further files here):
+ 
+-OBJS = $(PLUGIN).o dataplaylist.o menucontrol.o menuplaylist.o menuplaylists.o menusetup.o i18n.o vdrtools.o
++OBJS = $(PLUGIN).o dataplaylist.o menucontrol.o menuplaylist.o menuplaylists.o menusetup.o  vdrtools.o
+ 
+ ifeq ($(shell test $(VDRVERSNUM) -lt 10307 ; echo $$?),0)
+   OBJS += menuitemtext.o
+@@ -90,9 +90,34 @@
+ 
+ -include $(DEPFILE)
+ 
++### Internationalization (I18N):
++
++PODIR     = po
++LOCALEDIR = $(VDRDIR)/locale
++I18Npo    = $(wildcard $(PODIR)/*.po)
++I18Nmsgs  = $(addprefix $(LOCALEDIR)/, $(addsuffix /LC_MESSAGES/vdr-$(PLUGIN).mo, $(notdir $(foreach file, $(I18Npo), $(basename $(file))))))
++I18Npot   = $(PODIR)/$(PLUGIN).pot
++
++%.mo: %.po
++	msgfmt -c -o $@ $<
++
++$(I18Npot): $(wildcard *.[ch] *.[ch]xx *.cc *.[ch]pp *.hh)
++	xgettext -C -cTRANSLATORS --no-wrap --no-location -k -ktr -ktrNOOP --msgid-bugs-address='<http://qa.mandriva.com/>' -o $@ $^
++
++%.po: $(I18Npot)
++	msgmerge -U --no-wrap --no-location --backup=none -q $@ $<
++	@touch $@
++
++$(I18Nmsgs): $(LOCALEDIR)/%/LC_MESSAGES/vdr-$(PLUGIN).mo: $(PODIR)/%.mo
++	@mkdir -p $(dir $@)
++	cp $< $@
++
++.PHONY: i18n
++i18n: $(I18Nmsgs)
++
+ ### Targets:
+ 
+-all: libvdr-$(PLUGIN).so
++all: libvdr-$(PLUGIN).so i18n
+ 
+ libvdr-$(PLUGIN).so: $(OBJS)
+ 	$(CXX) $(CXXFLAGS) -shared $(OBJS) -o $@
+@@ -107,4 +132,5 @@
+ 	@echo Distribution package created as $(PACKAGE).tgz
+ 
+ clean:
++	@-rm -f $(PODIR)/*.mo $(PODIR)/*.pot
+ 	@-rm -f $(OBJS) $(DEPFILE) *.so *.tgz core* *~
+Index: playlist-0.0.2/dataplaylist.c
+===================================================================
+--- playlist-0.0.2/dataplaylist.c
++++ playlist-0.0.2/dataplaylist.c	2008-04-24 22:20:07.000000000 +0300
+@@ -10,7 +10,7 @@
+ #include <unistd.h>
+ #include "dataplaylist.h"
+ #include "playlist.h"
+-#include "i18n.h"
++
+ #include "vdrtools.h"
+ #include <vdr/keys.h>
+ #include <vdr/tools.h>
+Index: playlist-0.0.2/i18n.c
+===================================================================
+--- playlist-0.0.2/i18n.c
++++ playlist-0.0.2/i18n.c	2008-04-24 22:20:07.000000000 +0300
+@@ -1,1594 +0,0 @@
+-/*
+- * playlist: A plugin for the Video Disk Recorder
+- *
+- * See the README file for copyright information and how to reach the author.
+- *
+- * $Id: i18n.c 0.2 2004/10/08 02:34:00 hflor Exp $
+- */
+-
+-#include "i18n.h"
+-
+-const tI18nPhrase Phrases[] = {
+-  { "Add",
+-    "Hinzufügen",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Option",
+-    "Optionen",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Select",
+-    "Auswahl",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "UnMark",
+-    "Demakieren",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "playlist for recordings",
+-    "Playlisten für Aufnahmen",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Playlist",
+-    "Playlist",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Add selected Record to Playlist?",
+-    "Ausgewählte Aufnahme hinzufügen?",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Delete recording?",
+-    "Aufnahme löschen?",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Discard all changes?",
+-    "Alle Änderungen verwerfen?",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Display$Display Playlist",
+-    "Anzeige Playlist",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Display$Display Playlists",
+-    "Übersicht Playlisten",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Display$prepare playlists display...",
+-    "Listenanzeige wird vorbereitet...",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Display$prepare recording display...",
+-    "Listenanzeige wird vorbereitet...",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Edit$Confirm Options",
+-    "Bestätigung der Optionen",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Edit$Create Playlist",
+-    "Erstelle Playlist",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Edit$Edit Playlist",
+-    "Bearbeite Playlist",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Edit$Edit Record",
+-    "Bearbeite Aufnahme",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Edit$Delete Playlist?",
+-    "Löschen der Playlist?",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Edit$Delete Playlistentry?",
+-    "Löschen des Playlist-Eintrags?",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Error$Playlistentry or Record is deleted",
+-    "Playlisteintrag oder Aufnahme ist gelöscht",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Error$Missing playlistentry name!",
+-    "Name für Eintrag in Playlist fehlt!",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Error$Missing playlist name!",
+-    "Name für Playlist fehlt!",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Error$Move between folders and not folders not allowed.",
+-    "Vers. zw. Verzeichniss und normal nicht erlaubt",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Error$Playlistentry is not set",
+-    "Playlist-Eintrag ist fehlerhaft",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Error$Playlist is currently used by played recording",
+-    "Aktuelle Wiedergabe benutzt diese Playliste",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Error$same name of playlist exists!",
+-    "Gleicher Name der Playlist ist vorhanden",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "OptionPL$[from Folder]",
+-    "[von Verzeichniss]",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "OptionPL$[from Playlist]",
+-    "[von Playlist]",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "OptionPL$[from Setup]",
+-    "[von Einstellung]",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "OptionPL$first new",
+-    "erste neue",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "OptionPL$first pos",
+-    "erste Position",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "OptionPL$last played",
+-    "letzte Wiederg.",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "OptionPL$last pos",
+-    "letzte Position",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "OptionPL$question",
+-    "Frage",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "OptionPL$seletced pos",
+-    "ausgewählte",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "OptionPL$  Character for folders",
+-    "  Zeichen für Verzeichniss",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "OptionPL$  Character for normal records",
+-    "  Zeichen für normale Aufnahmen",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "OptionPL$  Character for records in folders",
+-    "  Zeichen für Aufn. im Verzeichnis",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "OptionPL$    Confirm delete records",
+-    "    Bestätigung löschen Aufnahmen",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "OptionPL$  Confirm delete records",
+-    "  Bestätigung löschen Aufnahmen",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "OptionPL$  Confirm start new record",
+-    "  Frage bei Start neue Wiedergabe",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "OptionPL$Confirm start new record",
+-    "Frage bei Start neue Wiedergabe",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "OptionPL$  Delete records after play",
+-    "  Löschen Aufn. nach Wiedergabe",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "OptionPL$Delete records after play",
+-    "Löschen Aufn. nach Wiedergabe",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "OptionPL$Effective setting is:",
+-    "Aktuelle Einstellung ist:",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "OptionPL$In detailview starts play at",
+-    "Wiedergabe bei Playliste startet",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "OptionPL$  In detailview starts play at",
+-    "  Wiedergabe bei Playliste startet",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "OptionPL$In playlistview starts play at",
+-    "Wiedergabe bei Übersicht startet",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "OptionPL$  In playlistview starts play at",
+-    "  Wiedergabe bei Übersicht startet",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "OptionPL$  Jump to first segment of movie",
+-    "  Zum ersten Filmteil sprigen",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "OptionPL$Jump to first segment of movie",
+-    "Zum ersten Filmteil sprigen",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "OptionPL$Name",
+-    "Name",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "OptionPL$Play only new Records",
+-    "Nur neue Aufzeichnungen abspielen",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "OptionPL$  Play only new Records",
+-    "  Nur neue Aufzeichnungen abspielen",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "OptionPL$  Remove records after play from list",
+-    "  PL-Eintrag n. Wiedergabe streichen",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "OptionPL$Remove records after play from list",
+-    "PL-Eintrag n. Wiedergabe streichen",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "OptionPL$  Search new records on folders",
+-    "  Verzeichnissuche neue Aufnahmen",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "OptionPL$Search new records on folders",
+-    "Verzeichnissuche neue Aufnahmen",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "OptionPL$  Search new records on subfolders",
+-    "  Aufnahmen in Unterverzei. suchen",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "OptionPL$Search records on subfolders",
+-    "Aufnahmen in Unterverzei. suchen",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Play$Delete recording:",
+-    "Aufnahme löschen:",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Play$Start next recording:",
+-    "Nächste Aufnahme starten:",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Play$Currently play first Record! Jump to last?",
+-    "Erste Aufnahme wird gespielt! Zur letzten gehen?",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Play$Currently play last Record! Jump to first?",
+-    "Letzte Aufnahme wird gespielt! Zur ersten gehen?",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Question$No new recording found! Play first?",
+-    "Keine neuen Aufnahmen! Erste abspielen?",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Question$Play first new recording?",
+-    "Erste neue Aufnahme abspielen?",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Question$Play last played recording?",
+-    "Zuletzt gespielte Aufnahme abspielen?",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Question$Save Playlist?",
+-    "Playlist speichern?",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Setup$after question",
+-    "nach Frage",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Setup$automatically",
+-    "automatisch",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Setup$Display last PL",
+-    "Anz. letzte PL",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Setup$Display PL",
+-    "Anzeige PL",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Setup$Edit",
+-    "Bearbeitung",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Setup$new empty PL",
+-    "leere PL",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Setup$Play",
+-    "Wiedergabe",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Setup$Play last PL",
+-    "Wiedergabe PL",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Setup$Allow delete Records",
+-    "Aufnahmen löschen erlauben",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Setup$Change Character for identification",
+-    "Darstellungszeichen ändern",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Setup$Change default options for playlist",
+-    "Standardoptionen für Playlist ändern",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Setup$Confirm delete playlistentries",
+-    "Frage löschen PL-Eintragungen",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Setup$  Name for Mainmenu",
+-    "  Eintragname im Hauptmenü",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Setup$Path for store playlists",
+-    "Speicherpfad für Playlisten",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Setup$Preferr Command Line Parameter",
+-    "Kommandozeile hat Vorrang",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Setup$Press OK in Playlistview starts",
+-    "OK in Playlist-Ansicht startet",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Setup$Startoptions for plugin",
+-    "Startoptionen des Plugins",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Setup$Store playlist after change",
+-    "Playlist nach Änderung speichern",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Setup$Verbose Log Mode",
+-    "Ausführliche Protokollierung",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Setup$Visible in Mainmenu",
+-    "Im Hauptmenü sichtbar",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Setup$Display playlists now",
+-    "Jetzt Playlisten anzeigen",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Setup$Play last playlist now",
+-    "Letzte Playlist wiedergeben",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Error$At this position and after no recording found!",
+-    "Dieser Position und danach ist keine Aufnahme",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "Question$Play selected recording?",
+-    "Ausgewählte Aufnahme abspielen?",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { "OptionPL$is:",
+-    "ist:",
+-    "",// TODO Slovenski
+-    "",// TODO Italiano
+-    "",// TODO Nederlands
+-    "",// TODO Português
+-    "",// TODO Français
+-    "",// TODO Norsk
+-    "",// TODO suomi
+-    "",// TODO Polski
+-    "",// TODO Español
+-    "",// TODO Ellinika
+-    "",// TODO Svenska
+-    "",// TODO Romaneste
+-    "",// TODO Magyar
+-    "",// TODO Català
+-  },
+-  { NULL }
+-  };
+Index: playlist-0.0.2/i18n.h
+===================================================================
+--- playlist-0.0.2/i18n.h
++++ playlist-0.0.2/i18n.h	2008-04-24 22:20:07.000000000 +0300
+@@ -1,16 +0,0 @@
+-/*
+- * playlist: A plugin for the Video Disk Recorder
+- *
+- * See the README file for copyright information and how to reach the author.
+- *
+- * $Id: i18n.h 0.1 2004/09/23 23:42:32 hflor Exp $
+- */
+-
+-#ifndef _I18N__H
+-#define _I18N__H
+-
+-#include <vdr/i18n.h>
+-
+-extern const tI18nPhrase Phrases[];
+-
+-#endif //_I18N__H
+Index: playlist-0.0.2/menuplaylist.c
+===================================================================
+--- playlist-0.0.2/menuplaylist.c
++++ playlist-0.0.2/menuplaylist.c	2008-04-24 22:20:07.000000000 +0300
+@@ -12,7 +12,7 @@
+ #include "menuitemtext.h"
+ #endif
+ #include "playlist.h"
+-#include "i18n.h"
++
+ #include "vdrtools.h"
+ #include <vdr/interface.h>
+ #include <vdr/videodir.h>
+Index: playlist-0.0.2/menuplaylists.c
+===================================================================
+--- playlist-0.0.2/menuplaylists.c
++++ playlist-0.0.2/menuplaylists.c	2008-04-24 22:20:07.000000000 +0300
+@@ -10,7 +10,7 @@
+ #include "dataplaylist.h"
+ #include "playlist.h"
+ #include "menuplaylist.h"
+-#include "i18n.h"
++
+ #include "vdrtools.h"
+ #include <vdr/interface.h>
+ 
+Index: playlist-0.0.2/menusetup.c
+===================================================================
+--- playlist-0.0.2/menusetup.c
++++ playlist-0.0.2/menusetup.c	2008-04-24 22:20:07.000000000 +0300
+@@ -10,7 +10,7 @@
+ #include "playlist.h"
+ #include "menuplaylists.h"
+ #include "menucontrol.h"
+-#include "i18n.h"
++
+ #include "vdrtools.h"
+ #include <vdr/plugin.h>
+ 
+Index: playlist-0.0.2/playlist.c
+===================================================================
+--- playlist-0.0.2/playlist.c
++++ playlist-0.0.2/playlist.c	2008-04-24 22:20:07.000000000 +0300
+@@ -10,14 +10,14 @@
+ #include "menuplaylists.h"
+ #include "menucontrol.h"
+ #include "menusetup.h"
+-#include "i18n.h"
++
+ #include "vdrtools.h"
+ #include <getopt.h>
+ #include <ctype.h>
+ #include <vdr/recording.h>
+ 
+ static const char *VERSION           = "0.0.2";
+-static const char *DESCRIPTION       = "playlist for recordings";
++static const char *DESCRIPTION       = trNOOP("playlist for recordings");
+ 
+ /* TODO
+ option playonlynewrecords
+@@ -37,7 +37,7 @@
+ #endif
+ tParamInt   commandline_preference   = { false, false, false, true };
+ tParamFile  lastplaylist             = { false, false, false, "" };
+-tParamFile  mainmenu_name            = { false, false, false, "Playlist" };
++tParamFile  mainmenu_name            = { false, false, false, trNOOP("Playlist") };
+ tParamInt   mainmenu_visible         = { false, false, false, true };
+ tParamInt   confirmdelplentry        = { false, false, false, true };
+ tParamInt   okstartplay              = { false, false, false, true };
+@@ -58,7 +58,7 @@
+                                        { false, false, false, true },                  // searchnewrecord
+                                        { false, false, false, true }};                 // searchrecordsub
+ 
+-char        plugin_name[MaxFileName]  = "Playlist";
++char        plugin_name[MaxFileName]  = trNOOP("Playlist");
+ char        DisplayStatus[MAXOSDTEXTWIDTH] = "";
+ const char  *NoYesDefault[NoYesDefault_max];
+ const char  *StartOptions[Start_max];
+@@ -366,7 +366,7 @@
+ bool cPluginPlaylist::Start(void)
+ {
+   // Start any background activities the plugin shall perform.
+-  RegisterI18n(Phrases);
++  
+   TestAndSetOSDLanguage();
+ 
+ #ifdef PL_Debug1
+Index: playlist-0.0.2/vdrtools.c
+===================================================================
+--- playlist-0.0.2/vdrtools.c
++++ playlist-0.0.2/vdrtools.c	2008-04-24 22:20:07.000000000 +0300
+@@ -9,7 +9,7 @@
+ #include "vdrtools.h"
+ #include "playlist.h"
+ #include "dataplaylist.h"
+-#include "i18n.h"
++
+ #include <vdr/menu.h>
+ #include <vdr/interface.h>
+ 
+Index: playlist-0.0.2/po/de_DE.po
+===================================================================
+--- playlist-0.0.2/po/de_DE.po
++++ playlist-0.0.2/po/de_DE.po	2008-04-24 22:20:07.000000000 +0300
+@@ -0,0 +1,599 @@
++# VDR playlist plugin language source file.
++# Copyright (C) YEAR THE VDR-playlist'S COPYRIGHT HOLDER
++# This file is distributed under the same license as the VDR-playlist package.
++# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
++#
++msgid ""
++msgstr ""
++"Project-Id-Version: VDR-playlist\n"
++"Report-Msgid-Bugs-To: http://qa.mandriva.com/\n"
++"POT-Creation-Date: 2008-04-24 22:20+0300\n"
++"PO-Revision-Date: 2008-04-24 22:20+0300\n"
++"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
++"Language-Team: <vdr@linuxtv.org>\n"
++"MIME-Version: 1.0\n"
++"Content-Type: text/plain; charset=ISO-8859-15\n"
++"Content-Transfer-Encoding: 8bit\n"
++
++#: dataplaylist.c:133 menuplaylist.c:169 vdrtools.c:112
++msgid "Error while accessing recording!"
++msgstr ""
++
++#: dataplaylist.h:132
++msgid "Question$Save Playlist?"
++msgstr "Playlist speichern?"
++
++#: menucontrol.c:84
++msgid "Play$Currently play first Record! Jump to last?"
++msgstr "Erste Aufnahme wird gespielt! Zur letzten gehen?"
++
++#: menucontrol.c:99
++msgid "Play$Currently play last Record! Jump to first?"
++msgstr "Letzte Aufnahme wird gespielt! Zur ersten gehen?"
++
++#: menucontrol.c:138
++msgid "Play$Delete recording:"
++msgstr "Aufnahme löschen:"
++
++#: menucontrol.c:152
++msgid "Play$Start next recording:"
++msgstr "Nächste Aufnahme starten:"
++
++#: menuplaylist.c:76 vdrtools.c:159
++msgid "Recordings"
++msgstr ""
++
++#: menuplaylist.c:83 menuplaylist.c:85 menuplaylist.c:89
++msgid "Display$prepare recording display..."
++msgstr "Listenanzeige wird vorbereitet..."
++
++#: menuplaylist.c:151
++msgid "Open"
++msgstr ""
++
++#: menuplaylist.c:153 menuplaylist.c:157
++msgid "Add"
++msgstr "Hinzufügen"
++
++#: menuplaylist.c:153 menuplaylist.c:157 menuplaylist.c:671
++msgid "Mark"
++msgstr ""
++
++#: menuplaylist.c:153 menuplaylist.c:157
++msgid "UnMark"
++msgstr "Demakieren"
++
++#: menuplaylist.c:157 menuplaylist.c:370 menuplaylist.c:671
++#: menuplaylists.c:342
++msgid "Delete"
++msgstr ""
++
++#: menuplaylist.c:157 menuplaylist.c:370
++msgid "Select"
++msgstr "Auswahl"
++
++#: menuplaylist.c:157 menuplaylist.c:261 menuplaylist.c:263 menuplaylist.c:370
++#: menuplaylist.c:478 menuplaylist.c:480
++msgid "Summary"
++msgstr ""
++
++#: menuplaylist.c:218
++msgid "Add selected Record to Playlist?"
++msgstr "Ausgewählte Aufnahme hinzufügen?"
++
++#: menuplaylist.c:241 vdrtools.c:74
++msgid "Delete recording?"
++msgstr "Aufnahme löschen?"
++
++#: menuplaylist.c:318
++msgid "Edit$Confirm Options"
++msgstr "Bestätigung der Optionen"
++
++#: menuplaylist.c:318
++msgid "Edit$Edit Record"
++msgstr "Bearbeite Aufnahme"
++
++#: menuplaylist.c:357
++msgid "OptionPL$is:"
++msgstr "ist:"
++
++#: menuplaylist.c:386
++msgid "Path"
++msgstr ""
++
++#: menuplaylist.c:445 menuplaylists.c:57
++msgid "OptionPL$Name"
++msgstr "Name"
++
++#: menuplaylist.c:451 menuplaylists.c:63
++msgid "OptionPL$Search new records on folders"
++msgstr "Verzeichnissuche neue Aufnahmen"
++
++#: menuplaylist.c:453 menuplaylists.c:65
++msgid "OptionPL$Search records on subfolders"
++msgstr "Aufnahmen in Unterverzei. suchen"
++
++#: menuplaylist.c:455 menuplaylists.c:67
++msgid "OptionPL$Play only new Records"
++msgstr "Nur neue Aufzeichnungen abspielen"
++
++#: menuplaylist.c:458 menuplaylists.c:69
++msgid "OptionPL$Jump to first segment of movie"
++msgstr "Zum ersten Filmteil sprigen"
++
++#: menuplaylist.c:460 menuplaylists.c:71
++msgid "OptionPL$Confirm start new record"
++msgstr "Frage bei Start neue Wiedergabe"
++
++#: menuplaylist.c:462 menuplaylists.c:73
++msgid "OptionPL$Remove records after play from list"
++msgstr "PL-Eintrag n. Wiedergabe streichen"
++
++#: menuplaylist.c:464 menuplaylists.c:75
++msgid "OptionPL$Delete records after play"
++msgstr "Löschen Aufn. nach Wiedergabe"
++
++#: menuplaylist.c:468 menuplaylists.c:79
++msgid "OptionPL$  Confirm delete records"
++msgstr "  Bestätigung löschen Aufnahmen"
++
++#: menuplaylist.c:546
++msgid "Error$Missing playlistentry name!"
++msgstr "Name für Eintrag in Playlist fehlt!"
++
++#: menuplaylist.c:621
++msgid "Error$Playlistentry or Record is deleted"
++msgstr "Playlisteintrag oder Aufnahme ist gelöscht"
++
++#: menuplaylist.c:627
++msgid "Error$Playlistentry is not set"
++msgstr "Playlist-Eintrag ist fehlerhaft"
++
++#: menuplaylist.c:637
++msgid "Display$Display Playlist"
++msgstr "Anzeige Playlist"
++
++#: menuplaylist.c:671 menuplaylist.c:673 menuplaylists.c:342
++#: menuplaylists.c:348
++msgid "New"
++msgstr ""
++
++#: menuplaylist.c:671 menuplaylists.c:342 vdrtools.c:144
++msgid "Play"
++msgstr ""
++
++#: menuplaylist.c:697
++msgid "Error$At this position and after no recording found!"
++msgstr "Dieser Position und danach ist keine Aufnahme"
++
++#: menuplaylist.c:704 menuplaylists.c:374
++msgid "Question$No new recording found! Play first?"
++msgstr "Keine neuen Aufnahmen! Erste abspielen?"
++
++#: menuplaylist.c:712
++msgid "Question$Play selected recording?"
++msgstr "Ausgewählte Aufnahme abspielen?"
++
++#: menuplaylist.c:717 menuplaylists.c:382
++msgid "Question$Play last played recording?"
++msgstr "Zuletzt gespielte Aufnahme abspielen?"
++
++#: menuplaylist.c:722 menuplaylists.c:387
++msgid "Question$Play first new recording?"
++msgstr "Erste neue Aufnahme abspielen?"
++
++#: menuplaylist.c:835
++msgid "Edit$Delete Playlistentry?"
++msgstr "Löschen des Playlist-Eintrags?"
++
++#: menuplaylist.c:880
++msgid "Error$Move between folders and not folders not allowed."
++msgstr "Vers. zw. Verzeichniss und normal nicht erlaubt"
++
++#: menuplaylists.c:20
++msgid "Edit$Create Playlist"
++msgstr "Erstelle Playlist"
++
++#: menuplaylists.c:20
++msgid "Edit$Edit Playlist"
++msgstr "Bearbeite Playlist"
++
++#: menuplaylists.c:59
++msgid "OptionPL$In playlistview starts play at"
++msgstr "Wiedergabe bei Übersicht startet"
++
++#: menuplaylists.c:61
++msgid "OptionPL$In detailview starts play at"
++msgstr "Wiedergabe bei Playliste startet"
++
++#: menuplaylists.c:119
++msgid "OptionPL$Effective setting is:"
++msgstr "Aktuelle Einstellung ist:"
++
++#: menuplaylists.c:154
++msgid "Error$Missing playlist name!"
++msgstr "Name für Playlist fehlt!"
++
++#: menuplaylists.c:169
++msgid "Error$same name of playlist exists!"
++msgstr "Gleicher Name der Playlist ist vorhanden"
++
++#: menuplaylists.c:197
++msgid "Discard all changes?"
++msgstr "Alle Änderungen verwerfen?"
++
++#: menuplaylists.c:245
++msgid "Display$Display Playlists"
++msgstr "Übersicht Playlisten"
++
++#: menuplaylists.c:255 menuplaylists.c:261 menuplaylists.c:263
++msgid "scanning recordings..."
++msgstr ""
++
++#: menuplaylists.c:278 menuplaylists.c:280 menuplaylists.c:284
++msgid "Display$prepare playlists display..."
++msgstr "Listenanzeige wird vorbereitet..."
++
++#: menuplaylists.c:342 menuplaylists.c:343
++msgid "Edit"
++msgstr ""
++
++#: menuplaylists.c:343
++msgid "Option"
++msgstr "Optionen"
++
++#: menuplaylists.c:417
++msgid "Error$Playlist is currently used by played recording"
++msgstr "Aktuelle Wiedergabe benutzt diese Playliste"
++
++#: menuplaylists.c:422
++msgid "Edit$Delete Playlist?"
++msgstr "Löschen der Playlist?"
++
++#: menusetup.c:145
++msgid "Setup$Display playlists now"
++msgstr "Jetzt Playlisten anzeigen"
++
++#: menusetup.c:146
++msgid "Setup$Play last playlist now"
++msgstr "Letzte Playlist wiedergeben"
++
++#: menusetup.c:148
++msgid "Setup$Preferr Command Line Parameter"
++msgstr "Kommandozeile hat Vorrang"
++
++#: menusetup.c:150
++msgid "Setup$Visible in Mainmenu"
++msgstr "Im Hauptmenü sichtbar"
++
++#: menusetup.c:152
++msgid "Setup$  Name for Mainmenu"
++msgstr "  Eintragname im Hauptmenü"
++
++#: menusetup.c:154
++msgid "Setup$Startoptions for plugin"
++msgstr "Startoptionen des Plugins"
++
++#: menusetup.c:156
++msgid "Setup$Edit"
++msgstr "Bearbeitung"
++
++#: menusetup.c:156
++msgid "Setup$Play"
++msgstr "Wiedergabe"
++
++#: menusetup.c:156
++msgid "Setup$Press OK in Playlistview starts"
++msgstr "OK in Playlist-Ansicht startet"
++
++#: menusetup.c:158
++msgid "Setup$Store playlist after change"
++msgstr "Playlist nach Änderung speichern"
++
++#: menusetup.c:158
++msgid "Setup$after question"
++msgstr "nach Frage"
++
++#: menusetup.c:158
++msgid "Setup$automatically"
++msgstr "automatisch"
++
++#: menusetup.c:160
++msgid "Setup$Allow delete Records"
++msgstr "Aufnahmen löschen erlauben"
++
++#: menusetup.c:162
++msgid "Setup$Confirm delete playlistentries"
++msgstr "Frage löschen PL-Eintragungen"
++
++#: menusetup.c:166
++msgid "Setup$Path for store playlists"
++msgstr "Speicherpfad für Playlisten"
++
++#: menusetup.c:168
++msgid "Setup$Change default options for playlist"
++msgstr "Standardoptionen für Playlist ändern"
++
++#: menusetup.c:172
++msgid "OptionPL$  In playlistview starts play at"
++msgstr "  Wiedergabe bei Übersicht startet"
++
++#: menusetup.c:174
++msgid "OptionPL$  In detailview starts play at"
++msgstr "  Wiedergabe bei Playliste startet"
++
++#: menusetup.c:176
++msgid "OptionPL$  Search new records on folders"
++msgstr "  Verzeichnissuche neue Aufnahmen"
++
++#: menusetup.c:178
++msgid "OptionPL$  Search new records on subfolders"
++msgstr "  Aufnahmen in Unterverzei. suchen"
++
++#: menusetup.c:180
++msgid "OptionPL$  Play only new Records"
++msgstr "  Nur neue Aufzeichnungen abspielen"
++
++#: menusetup.c:182
++msgid "OptionPL$  Jump to first segment of movie"
++msgstr "  Zum ersten Filmteil sprigen"
++
++#: menusetup.c:184
++msgid "OptionPL$  Confirm start new record"
++msgstr "  Frage bei Start neue Wiedergabe"
++
++#: menusetup.c:186
++msgid "OptionPL$  Remove records after play from list"
++msgstr "  PL-Eintrag n. Wiedergabe streichen"
++
++#: menusetup.c:188
++msgid "OptionPL$  Delete records after play"
++msgstr "  Löschen Aufn. nach Wiedergabe"
++
++#: menusetup.c:190
++msgid "OptionPL$    Confirm delete records"
++msgstr "    Bestätigung löschen Aufnahmen"
++
++#: menusetup.c:192
++msgid "Setup$Change Character for identification"
++msgstr "Darstellungszeichen ändern"
++
++#: menusetup.c:196
++msgid "OptionPL$  Character for folders"
++msgstr "  Zeichen für Verzeichniss"
++
++#: menusetup.c:198
++msgid "OptionPL$  Character for records in folders"
++msgstr "  Zeichen für Aufn. im Verzeichnis"
++
++#: menusetup.c:200
++msgid "OptionPL$  Character for normal records"
++msgstr "  Zeichen für normale Aufnahmen"
++
++#: menusetup.c:203
++msgid "Setup$Verbose Log Mode"
++msgstr "Ausführliche Protokollierung"
++
++#: playlist.c:20
++msgid "playlist for recordings"
++msgstr "Playlisten für Aufnahmen"
++
++#: playlist.c:40 playlist.c:61
++msgid "Playlist"
++msgstr "Playlist"
++
++#: playlist.c:187
++msgid "Setup$Display PL"
++msgstr "Anzeige PL"
++
++#: playlist.c:188
++msgid "Setup$Display last PL"
++msgstr "Anz. letzte PL"
++
++#: playlist.c:189
++msgid "Setup$Play last PL"
++msgstr "Wiedergabe PL"
++
++#: playlist.c:190
++msgid "Setup$new empty PL"
++msgstr "leere PL"
++
++#: playlist.c:191
++msgid "no"
++msgstr ""
++
++#: playlist.c:192
++msgid "yes"
++msgstr ""
++
++#: playlist.c:193 playlist.c:201
++msgid "OptionPL$[from Setup]"
++msgstr "[von Einstellung]"
++
++#: playlist.c:194
++msgid "OptionPL$[from Playlist]"
++msgstr "[von Playlist]"
++
++#: playlist.c:195
++msgid "OptionPL$[from Folder]"
++msgstr "[von Verzeichniss]"
++
++#: playlist.c:196
++msgid "OptionPL$first pos"
++msgstr "erste Position"
++
++#: playlist.c:197
++msgid "OptionPL$first new"
++msgstr "erste neue"
++
++#: playlist.c:198
++msgid "OptionPL$last played"
++msgstr "letzte Wiederg."
++
++#: playlist.c:199
++msgid "OptionPL$seletced pos"
++msgstr "ausgewählte"
++
++#: playlist.c:200
++msgid "OptionPL$question"
++msgstr "Frage"
++
++#: vdrtools.c:79
++msgid "Timer still recording - really delete?"
++msgstr ""
++
++#: vdrtools.c:123
++msgid "Up"
++msgstr ""
++
++#: vdrtools.c:124
++msgid "Down"
++msgstr ""
++
++#: vdrtools.c:125
++msgid "Menu"
++msgstr ""
++
++#: vdrtools.c:126
++msgid "Ok"
++msgstr ""
++
++#: vdrtools.c:127
++msgid "Back"
++msgstr ""
++
++#: vdrtools.c:128
++msgid "Left"
++msgstr ""
++
++#: vdrtools.c:129
++msgid "Right"
++msgstr ""
++
++#: vdrtools.c:130
++msgid "Red"
++msgstr ""
++
++#: vdrtools.c:131
++msgid "Green"
++msgstr ""
++
++#: vdrtools.c:132
++msgid "Yellow"
++msgstr ""
++
++#: vdrtools.c:133
++msgid "Blue"
++msgstr ""
++
++#: vdrtools.c:145
++msgid "Pause"
++msgstr ""
++
++#: vdrtools.c:146
++msgid "Stop"
++msgstr ""
++
++#: vdrtools.c:147
++msgid "Record"
++msgstr ""
++
++#: vdrtools.c:148
++msgid "FastFwd"
++msgstr ""
++
++#: vdrtools.c:149
++msgid "FastRew"
++msgstr ""
++
++#: vdrtools.c:150
++msgid "Power"
++msgstr ""
++
++#: vdrtools.c:151
++msgid "ChanUp"
++msgstr ""
++
++#: vdrtools.c:152
++msgid "ChanDn"
++msgstr ""
++
++#: vdrtools.c:153
++msgid "VolUp"
++msgstr ""
++
++#: vdrtools.c:154
++msgid "VolDn"
++msgstr ""
++
++#: vdrtools.c:155
++msgid "Mute"
++msgstr ""
++
++#: vdrtools.c:156
++msgid "Schedule"
++msgstr ""
++
++#: vdrtools.c:157
++msgid "Channels"
++msgstr ""
++
++#: vdrtools.c:158
++msgid "Timers"
++msgstr ""
++
++#: vdrtools.c:160
++msgid "Setup"
++msgstr ""
++
++#: vdrtools.c:161
++msgid "Commands"
++msgstr ""
++
++#: vdrtools.c:162
++msgid "User1"
++msgstr ""
++
++#: vdrtools.c:163
++msgid "User2"
++msgstr ""
++
++#: vdrtools.c:164
++msgid "User3"
++msgstr ""
++
++#: vdrtools.c:165
++msgid "User4"
++msgstr ""
++
++#: vdrtools.c:166
++msgid "User5"
++msgstr ""
++
++#: vdrtools.c:167
++msgid "User6"
++msgstr ""
++
++#: vdrtools.c:168
++msgid "User7"
++msgstr ""
++
++#: vdrtools.c:169
++msgid "User8"
++msgstr ""
++
++#: vdrtools.c:170
++msgid "User9"
++msgstr ""
++
++#: vdrtools.c:171
++msgid "none"
++msgstr ""
++
++#: vdrtools.c:172
++msgid "Kbd"
++msgstr ""
++
++#: vdrtools.c:173
++msgid "unknow"
++msgstr ""
+Index: playlist-0.0.2/po/playlist.pot
+===================================================================
+--- playlist-0.0.2/po/playlist.pot
++++ playlist-0.0.2/po/playlist.pot	2008-04-24 22:20:07.000000000 +0300
+@@ -0,0 +1,600 @@
++# SOME DESCRIPTIVE TITLE.
++# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
++# This file is distributed under the same license as the PACKAGE package.
++# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
++#
++#, fuzzy
++msgid ""
++msgstr ""
++"Project-Id-Version: PACKAGE VERSION\n"
++"Report-Msgid-Bugs-To: http://qa.mandriva.com/\n"
++"POT-Creation-Date: 2008-04-24 22:20+0300\n"
++"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
++"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
++"Language-Team: LANGUAGE <LL@li.org>\n"
++"MIME-Version: 1.0\n"
++"Content-Type: text/plain; charset=CHARSET\n"
++"Content-Transfer-Encoding: 8bit\n"
++
++#: dataplaylist.c:133 menuplaylist.c:169 vdrtools.c:112
++msgid "Error while accessing recording!"
++msgstr ""
++
++#: dataplaylist.h:132
++msgid "Question$Save Playlist?"
++msgstr ""
++
++#: menucontrol.c:84
++msgid "Play$Currently play first Record! Jump to last?"
++msgstr ""
++
++#: menucontrol.c:99
++msgid "Play$Currently play last Record! Jump to first?"
++msgstr ""
++
++#: menucontrol.c:138
++msgid "Play$Delete recording:"
++msgstr ""
++
++#: menucontrol.c:152
++msgid "Play$Start next recording:"
++msgstr ""
++
++#: menuplaylist.c:76 vdrtools.c:159
++msgid "Recordings"
++msgstr ""
++
++#: menuplaylist.c:83 menuplaylist.c:85 menuplaylist.c:89
++msgid "Display$prepare recording display..."
++msgstr ""
++
++#: menuplaylist.c:151
++msgid "Open"
++msgstr ""
++
++#: menuplaylist.c:153 menuplaylist.c:157
++msgid "Add"
++msgstr ""
++
++#: menuplaylist.c:153 menuplaylist.c:157 menuplaylist.c:671
++msgid "Mark"
++msgstr ""
++
++#: menuplaylist.c:153 menuplaylist.c:157
++msgid "UnMark"
++msgstr ""
++
++#: menuplaylist.c:157 menuplaylist.c:370 menuplaylist.c:671
++#: menuplaylists.c:342
++msgid "Delete"
++msgstr ""
++
++#: menuplaylist.c:157 menuplaylist.c:370
++msgid "Select"
++msgstr ""
++
++#: menuplaylist.c:157 menuplaylist.c:261 menuplaylist.c:263 menuplaylist.c:370
++#: menuplaylist.c:478 menuplaylist.c:480
++msgid "Summary"
++msgstr ""
++
++#: menuplaylist.c:218
++msgid "Add selected Record to Playlist?"
++msgstr ""
++
++#: menuplaylist.c:241 vdrtools.c:74
++msgid "Delete recording?"
++msgstr ""
++
++#: menuplaylist.c:318
++msgid "Edit$Confirm Options"
++msgstr ""
++
++#: menuplaylist.c:318
++msgid "Edit$Edit Record"
++msgstr ""
++
++#: menuplaylist.c:357
++msgid "OptionPL$is:"
++msgstr ""
++
++#: menuplaylist.c:386
++msgid "Path"
++msgstr ""
++
++#: menuplaylist.c:445 menuplaylists.c:57
++msgid "OptionPL$Name"
++msgstr ""
++
++#: menuplaylist.c:451 menuplaylists.c:63
++msgid "OptionPL$Search new records on folders"
++msgstr ""
++
++#: menuplaylist.c:453 menuplaylists.c:65
++msgid "OptionPL$Search records on subfolders"
++msgstr ""
++
++#: menuplaylist.c:455 menuplaylists.c:67
++msgid "OptionPL$Play only new Records"
++msgstr ""
++
++#: menuplaylist.c:458 menuplaylists.c:69
++msgid "OptionPL$Jump to first segment of movie"
++msgstr ""
++
++#: menuplaylist.c:460 menuplaylists.c:71
++msgid "OptionPL$Confirm start new record"
++msgstr ""
++
++#: menuplaylist.c:462 menuplaylists.c:73
++msgid "OptionPL$Remove records after play from list"
++msgstr ""
++
++#: menuplaylist.c:464 menuplaylists.c:75
++msgid "OptionPL$Delete records after play"
++msgstr ""
++
++#: menuplaylist.c:468 menuplaylists.c:79
++msgid "OptionPL$  Confirm delete records"
++msgstr ""
++
++#: menuplaylist.c:546
++msgid "Error$Missing playlistentry name!"
++msgstr ""
++
++#: menuplaylist.c:621
++msgid "Error$Playlistentry or Record is deleted"
++msgstr ""
++
++#: menuplaylist.c:627
++msgid "Error$Playlistentry is not set"
++msgstr ""
++
++#: menuplaylist.c:637
++msgid "Display$Display Playlist"
++msgstr ""
++
++#: menuplaylist.c:671 menuplaylist.c:673 menuplaylists.c:342
++#: menuplaylists.c:348
++msgid "New"
++msgstr ""
++
++#: menuplaylist.c:671 menuplaylists.c:342 vdrtools.c:144
++msgid "Play"
++msgstr ""
++
++#: menuplaylist.c:697
++msgid "Error$At this position and after no recording found!"
++msgstr ""
++
++#: menuplaylist.c:704 menuplaylists.c:374
++msgid "Question$No new recording found! Play first?"
++msgstr ""
++
++#: menuplaylist.c:712
++msgid "Question$Play selected recording?"
++msgstr ""
++
++#: menuplaylist.c:717 menuplaylists.c:382
++msgid "Question$Play last played recording?"
++msgstr ""
++
++#: menuplaylist.c:722 menuplaylists.c:387
++msgid "Question$Play first new recording?"
++msgstr ""
++
++#: menuplaylist.c:835
++msgid "Edit$Delete Playlistentry?"
++msgstr ""
++
++#: menuplaylist.c:880
++msgid "Error$Move between folders and not folders not allowed."
++msgstr ""
++
++#: menuplaylists.c:20
++msgid "Edit$Create Playlist"
++msgstr ""
++
++#: menuplaylists.c:20
++msgid "Edit$Edit Playlist"
++msgstr ""
++
++#: menuplaylists.c:59
++msgid "OptionPL$In playlistview starts play at"
++msgstr ""
++
++#: menuplaylists.c:61
++msgid "OptionPL$In detailview starts play at"
++msgstr ""
++
++#: menuplaylists.c:119
++msgid "OptionPL$Effective setting is:"
++msgstr ""
++
++#: menuplaylists.c:154
++msgid "Error$Missing playlist name!"
++msgstr ""
++
++#: menuplaylists.c:169
++msgid "Error$same name of playlist exists!"
++msgstr ""
++
++#: menuplaylists.c:197
++msgid "Discard all changes?"
++msgstr ""
++
++#: menuplaylists.c:245
++msgid "Display$Display Playlists"
++msgstr ""
++
++#: menuplaylists.c:255 menuplaylists.c:261 menuplaylists.c:263
++msgid "scanning recordings..."
++msgstr ""
++
++#: menuplaylists.c:278 menuplaylists.c:280 menuplaylists.c:284
++msgid "Display$prepare playlists display..."
++msgstr ""
++
++#: menuplaylists.c:342 menuplaylists.c:343
++msgid "Edit"
++msgstr ""
++
++#: menuplaylists.c:343
++msgid "Option"
++msgstr ""
++
++#: menuplaylists.c:417
++msgid "Error$Playlist is currently used by played recording"
++msgstr ""
++
++#: menuplaylists.c:422
++msgid "Edit$Delete Playlist?"
++msgstr ""
++
++#: menusetup.c:145
++msgid "Setup$Display playlists now"
++msgstr ""
++
++#: menusetup.c:146
++msgid "Setup$Play last playlist now"
++msgstr ""
++
++#: menusetup.c:148
++msgid "Setup$Preferr Command Line Parameter"
++msgstr ""
++
++#: menusetup.c:150
++msgid "Setup$Visible in Mainmenu"
++msgstr ""
++
++#: menusetup.c:152
++msgid "Setup$  Name for Mainmenu"
++msgstr ""
++
++#: menusetup.c:154
++msgid "Setup$Startoptions for plugin"
++msgstr ""
++
++#: menusetup.c:156
++msgid "Setup$Edit"
++msgstr ""
++
++#: menusetup.c:156
++msgid "Setup$Play"
++msgstr ""
++
++#: menusetup.c:156
++msgid "Setup$Press OK in Playlistview starts"
++msgstr ""
++
++#: menusetup.c:158
++msgid "Setup$Store playlist after change"
++msgstr ""
++
++#: menusetup.c:158
++msgid "Setup$after question"
++msgstr ""
++
++#: menusetup.c:158
++msgid "Setup$automatically"
++msgstr ""
++
++#: menusetup.c:160
++msgid "Setup$Allow delete Records"
++msgstr ""
++
++#: menusetup.c:162
++msgid "Setup$Confirm delete playlistentries"
++msgstr ""
++
++#: menusetup.c:166
++msgid "Setup$Path for store playlists"
++msgstr ""
++
++#: menusetup.c:168
++msgid "Setup$Change default options for playlist"
++msgstr ""
++
++#: menusetup.c:172
++msgid "OptionPL$  In playlistview starts play at"
++msgstr ""
++
++#: menusetup.c:174
++msgid "OptionPL$  In detailview starts play at"
++msgstr ""
++
++#: menusetup.c:176
++msgid "OptionPL$  Search new records on folders"
++msgstr ""
++
++#: menusetup.c:178
++msgid "OptionPL$  Search new records on subfolders"
++msgstr ""
++
++#: menusetup.c:180
++msgid "OptionPL$  Play only new Records"
++msgstr ""
++
++#: menusetup.c:182
++msgid "OptionPL$  Jump to first segment of movie"
++msgstr ""
++
++#: menusetup.c:184
++msgid "OptionPL$  Confirm start new record"
++msgstr ""
++
++#: menusetup.c:186
++msgid "OptionPL$  Remove records after play from list"
++msgstr ""
++
++#: menusetup.c:188
++msgid "OptionPL$  Delete records after play"
++msgstr ""
++
++#: menusetup.c:190
++msgid "OptionPL$    Confirm delete records"
++msgstr ""
++
++#: menusetup.c:192
++msgid "Setup$Change Character for identification"
++msgstr ""
++
++#: menusetup.c:196
++msgid "OptionPL$  Character for folders"
++msgstr ""
++
++#: menusetup.c:198
++msgid "OptionPL$  Character for records in folders"
++msgstr ""
++
++#: menusetup.c:200
++msgid "OptionPL$  Character for normal records"
++msgstr ""
++
++#: menusetup.c:203
++msgid "Setup$Verbose Log Mode"
++msgstr ""
++
++#: playlist.c:20
++msgid "playlist for recordings"
++msgstr ""
++
++#: playlist.c:40 playlist.c:61
++msgid "Playlist"
++msgstr ""
++
++#: playlist.c:187
++msgid "Setup$Display PL"
++msgstr ""
++
++#: playlist.c:188
++msgid "Setup$Display last PL"
++msgstr ""
++
++#: playlist.c:189
++msgid "Setup$Play last PL"
++msgstr ""
++
++#: playlist.c:190
++msgid "Setup$new empty PL"
++msgstr ""
++
++#: playlist.c:191
++msgid "no"
++msgstr ""
++
++#: playlist.c:192
++msgid "yes"
++msgstr ""
++
++#: playlist.c:193 playlist.c:201
++msgid "OptionPL$[from Setup]"
++msgstr ""
++
++#: playlist.c:194
++msgid "OptionPL$[from Playlist]"
++msgstr ""
++
++#: playlist.c:195
++msgid "OptionPL$[from Folder]"
++msgstr ""
++
++#: playlist.c:196
++msgid "OptionPL$first pos"
++msgstr ""
++
++#: playlist.c:197
++msgid "OptionPL$first new"
++msgstr ""
++
++#: playlist.c:198
++msgid "OptionPL$last played"
++msgstr ""
++
++#: playlist.c:199
++msgid "OptionPL$seletced pos"
++msgstr ""
++
++#: playlist.c:200
++msgid "OptionPL$question"
++msgstr ""
++
++#: vdrtools.c:79
++msgid "Timer still recording - really delete?"
++msgstr ""
++
++#: vdrtools.c:123
++msgid "Up"
++msgstr ""
++
++#: vdrtools.c:124
++msgid "Down"
++msgstr ""
++
++#: vdrtools.c:125
++msgid "Menu"
++msgstr ""
++
++#: vdrtools.c:126
++msgid "Ok"
++msgstr ""
++
++#: vdrtools.c:127
++msgid "Back"
++msgstr ""
++
++#: vdrtools.c:128
++msgid "Left"
++msgstr ""
++
++#: vdrtools.c:129
++msgid "Right"
++msgstr ""
++
++#: vdrtools.c:130
++msgid "Red"
++msgstr ""
++
++#: vdrtools.c:131
++msgid "Green"
++msgstr ""
++
++#: vdrtools.c:132
++msgid "Yellow"
++msgstr ""
++
++#: vdrtools.c:133
++msgid "Blue"
++msgstr ""
++
++#: vdrtools.c:145
++msgid "Pause"
++msgstr ""
++
++#: vdrtools.c:146
++msgid "Stop"
++msgstr ""
++
++#: vdrtools.c:147
++msgid "Record"
++msgstr ""
++
++#: vdrtools.c:148
++msgid "FastFwd"
++msgstr ""
++
++#: vdrtools.c:149
++msgid "FastRew"
++msgstr ""
++
++#: vdrtools.c:150
++msgid "Power"
++msgstr ""
++
++#: vdrtools.c:151
++msgid "ChanUp"
++msgstr ""
++
++#: vdrtools.c:152
++msgid "ChanDn"
++msgstr ""
++
++#: vdrtools.c:153
++msgid "VolUp"
++msgstr ""
++
++#: vdrtools.c:154
++msgid "VolDn"
++msgstr ""
++
++#: vdrtools.c:155
++msgid "Mute"
++msgstr ""
++
++#: vdrtools.c:156
++msgid "Schedule"
++msgstr ""
++
++#: vdrtools.c:157
++msgid "Channels"
++msgstr ""
++
++#: vdrtools.c:158
++msgid "Timers"
++msgstr ""
++
++#: vdrtools.c:160
++msgid "Setup"
++msgstr ""
++
++#: vdrtools.c:161
++msgid "Commands"
++msgstr ""
++
++#: vdrtools.c:162
++msgid "User1"
++msgstr ""
++
++#: vdrtools.c:163
++msgid "User2"
++msgstr ""
++
++#: vdrtools.c:164
++msgid "User3"
++msgstr ""
++
++#: vdrtools.c:165
++msgid "User4"
++msgstr ""
++
++#: vdrtools.c:166
++msgid "User5"
++msgstr ""
++
++#: vdrtools.c:167
++msgid "User6"
++msgstr ""
++
++#: vdrtools.c:168
++msgid "User7"
++msgstr ""
++
++#: vdrtools.c:169
++msgid "User8"
++msgstr ""
++
++#: vdrtools.c:170
++msgid "User9"
++msgstr ""
++
++#: vdrtools.c:171
++msgid "none"
++msgstr ""
++
++#: vdrtools.c:172
++msgid "Kbd"
++msgstr ""
++
++#: vdrtools.c:173
++msgid "unknow"
++msgstr ""
