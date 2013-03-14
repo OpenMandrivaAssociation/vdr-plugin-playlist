@@ -3,7 +3,7 @@
 %define name	vdr-plugin-%plugin
 %define version	0.0.2
 %define prever	rc3
-%define rel	16
+%define rel	17
 %define release	0.%prever.%rel
 
 Summary:	VDR plugin: playlist for recordings
@@ -17,7 +17,6 @@ Source:		http://www.fast-info.de/vdr/playlist/vdr-%plugin-%version%prever.tar.bz
 Patch0:		91_playlist-0.0.2rc3-fix-1.3.25.dpatch
 Patch1:		93_playlist-0.0.2-1.5.7.dpatch
 Patch2:		playlist-0.0.2-i18n-1.6.patch
-BuildRoot:	%{_tmppath}/%{name}-buildroot
 BuildRequires:	vdr-devel >= 1.6.0
 Requires:	vdr-abi = %vdr_abi
 
@@ -84,17 +83,7 @@ param=--ns_commandline
 %vdr_plugin_build
 
 %install
-rm -rf %{buildroot}
 %vdr_plugin_install
-
-%clean
-rm -rf %{buildroot}
-
-%post
-%vdr_plugin_post %plugin
-
-%postun
-%vdr_plugin_postun %plugin
 
 %files -f %plugin.vdr
 %defattr(-,root,root)
