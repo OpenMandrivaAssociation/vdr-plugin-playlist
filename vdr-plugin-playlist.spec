@@ -12,7 +12,7 @@ Version:	%version
 Release:	%mkrel %release
 Group:		Video
 License:	GPL
-URL:		http://www.linuxtv.org/vdrwiki/index.php/Playlist-plugin
+URL:		https://www.linuxtv.org/vdrwiki/index.php/Playlist-plugin
 Source:		http://www.fast-info.de/vdr/playlist/vdr-%plugin-%version%prever.tar.bz2
 Patch0:		91_playlist-0.0.2rc3-fix-1.3.25.dpatch
 Patch1:		93_playlist-0.0.2-1.5.7.dpatch
